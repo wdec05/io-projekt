@@ -1,10 +1,10 @@
-# 🏭 System Weryfikacji Pracowników
+# System Weryfikacji Pracowników
 
 System rejestracji wejść i wyjść pracowników wykorzystujący **kody QR** i **rozpoznawanie twarzy**.
 
 ---
 
-## 🚀 Instalacja
+## Instalacja
 
 ### 1. Zainstaluj zależności:
 ```bash
@@ -22,7 +22,7 @@ python terminal.py
 
 ---
 
-## 📊 Struktura projektu
+## Struktura projektu
 
 ```
 projekt/
@@ -40,7 +40,7 @@ projekt/
 
 ---
 
-## 🎯 Jak używać?
+## Jak używać?
 
 ### **Panel Administratora** (`http://127.0.0.1:5000`)
 
@@ -59,7 +59,7 @@ projekt/
 
 ---
 
-## 📈 Typy logowanych zdarzeń
+## Typy logowanych zdarzeń
 
 | Typ zdarzenia | Opis |
 |--------------|------|
@@ -72,7 +72,7 @@ projekt/
 
 ---
 
-## 📥 Raporty Excel
+## Raporty Excel
 
 Pobierany raport zawiera:
 
@@ -92,7 +92,7 @@ Pobierany raport zawiera:
 
 ---
 
-## 🔧 Konfiguracja
+## Konfiguracja
 
 ### Próg weryfikacji twarzy
 W pliku `terminal.py` zmień wartość:
@@ -114,7 +114,7 @@ self.cooldown = 3  # sekundy
 
 ---
 
-## 🎨 Filtry w historii weryfikacji
+## Filtry w historii weryfikacji
 
 - **Pracownik** - wybierz konkretną osobę
 - **Typ zdarzenia** - QR/twarz/błędy
@@ -123,7 +123,7 @@ self.cooldown = 3  # sekundy
 
 ---
 
-## 🛡️ Bezpieczeństwo
+## Bezpieczeństwo
 
 - Kody QR są unikalne (UUID)
 - Kody QR wygasają po 30 dniach
