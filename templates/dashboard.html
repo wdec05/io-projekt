@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administratora</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 1200px; margin: auto; background: #f5f5f5; }
+        
+        /* NAGŁÓWEK */
+        h1 { color: #333; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        
+        /* STATYSTYKI - NOWA SEKCJA */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        /* Dodaj to do sekcji <style> */
+        td form {
+            display: inline-block;
+        }
+        td input[type="file"] {
+            width: 150px; /* mniejszy wybór pliku w tabeli */
+            font-size: 11px;
+        }
+        td button {
+            margin: 2px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-box h3 {
+            font-size: 14px;
+            margin: 0 0 10px 0;
+            opacity: 0.9;
+        }
+        
+        .stat-box .number {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .stat-box.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .stat-box.error {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        
+        /* PRZYCISKI NAWIGACYJNE - NOWA SEKCJA */
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .nav-btn {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-block;
+            transition: 0.2s;
+        }
+        
+        .nav-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .nav-btn.secondary:hover {
+            background: #5a6268;
+        }
+        
+        /* POZOSTAŁE STYLE (TWOJE ORYGINALNE) */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .form-box { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        input { padding: 8px; width: 300px; }
+        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; }
+        .badge-ok { color: green; font-weight: bold; }
+        .badge-missing { color: red; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <h1>Panel Administratora</h1>
+    <p class="subtitle">System weryfikacji pracowników</p>
+
+    <div class="stats-container">
+        
+        <div class="stat-box success">
+            <h3>Udane wejścia</h3>
+            <div class="number">{{ successful_entries }}</div>
+        </div>
+        <div class="stat-box error">
+            <h3>Nieudane próby</h3>
+            <div class="number">{{ failed_entries }}</div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <a href="/logs" class="nav-btn">📋 Historia weryfikacji</a>
+        <a href="/download_report" class="nav-btn secondary">📥 Pobierz pełny raport</a>
+    </div>
+
+    <div class="form-box">
+        <h3>Szybka rejestracja pracownika</h3>
+        <form action="/add" method="POST">
+            <input type="text" name="name" placeholder="Imię i Nazwisko" required>
+            <input type="text" name="email" placeholder="Email" required>
+            <button type="submit">Dodaj do listy</button>
+        </form>
+    </div>
+
+    <h2>Lista Pracowników ({{ pracownicy|length }})</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Pracownik</th>
+                <th>Status QR</th>
+                <th>Status Zdjęcia</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pracownik in pracownicy %}
+            <tr>
+                <td>{{ pracownik.id }}</td>
+                <td><strong>{{ pracownik.name }}</strong></td>
+                
+                <td>
+                    {% if pracownik.qr_filename %}
+                        {% if pracownik.qr_expiry_date and pracownik.qr_expiry_date.timestamp() > now.timestamp() %}
+                            <span class="badge-ok">WAŻNY</span><br>
+                            Wygasa: {{ pracownik.qr_expiry_date.strftime('%Y-%m-%d') }}
+                        {% elif pracownik.qr_expiry_date %}
+                            <span style="color: red; font-weight: bold;">WYGASŁY</span><br>
+                            Data: {{ pracownik.qr_expiry_date.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            <span class="badge-missing">Brak pliku</span>
+                        {% endif %}
+                        <a href="{{ url_for('static', filename='qr_codes/' + pracownik.qr_filename) }}" target="_blank"> (Zobacz)</a>
+                    {% else %}
+                        <span class="badge-missing">Brak kodu</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if pracownik.face_encoding %}
+                        <span class="badge-ok">Weryfikacja aktywna</span>
+                    {% else %}
+                        <span class="badge-missing">Brak zdjęcia</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if not pracownik.qr_filename %}
+                        <a href="{{ url_for('generate_qr', employee_id=pracownik.id) }}">
+                            <button>Generuj QR</button>
+                        </a>
+                    {% elif pracownik.qr_expiry_date and pracownik.qr_expiry_date.timestamp() < now.timestamp() %}
+                        <a href="{{ url_for('regenerate_qr', employee_id=pracownik.id) }}">
+                            <button style="background: orange;">Odnów QR</button>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('send_qr_email', employee_id=pracownik.id) }}">
+                            <button style="background: #4A90E2; color: white;" title="Wyślij kod na email">📧 Wyślij Email</button>
+                        </a>
+                        <button disabled>QR OK</button>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('upload_photo', employee_id=pracownik.id) }}" method="POST" enctype="multipart/form-data" style="display: inline;">
+                        <input type="file" name="photo" accept="image/*" required style="width: auto;">
+                        <button type="submit">Wgraj</button>
+                    </form>
+                    
+                    <a href="{{ url_for('delete_employee', employee_id=pracownik.id) }}" onclick="return confirm('Czy na pewno usunąć pracownika?')">
+                        <button style="background: red; color: white;">Usuń</button>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5">Brak pracowników.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia weryfikacji</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        /* FILTRY */
+        .filters {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .filters h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        /* TABELA */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* STATUSY */
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* TYPY ZDARZEŃ */
+        .event-type {
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .event-qr-success {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        
+        .event-qr-invalid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .event-qr-expired {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .event-face-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .event-face-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .event-no-face {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Powrót do panelu</a>
+        
+        <h1>Historia weryfikacji</h1>
+        <p class="subtitle">Wszystkie próby dostępu do systemu</p>
+        
+        <!-- FILTRY -->
+        <div class="filters">
+            <h3>Filtruj wyniki</h3>
+            <form method="GET" action="/logs">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Pracownik</label>
+                        <select name="pracownik_id">
+                            <option value="">Wszyscy pracownicy</option>
+                            {% for p in pracownicy %}
+                            <option value="{{ p.id }}" {% if filters.pracownik_id == p.id %}selected{% endif %}>
+                                {{ p.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Typ zdarzenia</label>
+                        <select name="event_type">
+                            <option value="">Wszystkie</option>
+                            <option value="QR_SUCCESS" {% if filters.event_type == 'QR_SUCCESS' %}selected{% endif %}>QR - Sukces</option>
+                            <option value="QR_INVALID" {% if filters.event_type == 'QR_INVALID' %}selected{% endif %}>QR - Nieprawidłowy</option>
+                            <option value="QR_EXPIRED" {% if filters.event_type == 'QR_EXPIRED' %}selected{% endif %}>QR - Wygasły</option>
+                            <option value="FACE_SUCCESS" {% if filters.event_type == 'FACE_SUCCESS' %}selected{% endif %}>Twarz - Sukces</option>
+                            <option value="FACE_FAILED" {% if filters.event_type == 'FACE_FAILED' %}selected{% endif %}>Twarz - Błąd</option>
+                            <option value="NO_FACE_DATA" {% if filters.event_type == 'NO_FACE_DATA' %}selected{% endif %}>Brak danych twarzy</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Data od</label>
+                        <input type="date" name="date_from" value="{{ filters.date_from or '' }}">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Data do</label>
+                        <input type="date" name="date_to" value="{{ filters.date_to or '' }}">
+                    </div>
+                </div>
+                
+                <div class="filter-buttons">
+                    <button type="submit" class="btn btn-primary">🔍 Filtruj</button>
+                    <a href="/logs" class="btn btn-secondary">✖ Wyczyść filtry</a>
+                    <a href="/download_report?{{ request.query_string.decode() }}" class="btn btn-success">📥 Pobierz raport Excel</a>
+                </div>
+            </form>
+        </div>
+        
+        <!-- TABELA -->
+        <div class="table-container">
+            {% if logs %}
+            <p style="margin-bottom: 15px; color: #666;">
+                <strong>Znaleziono: {{ logs|length }} zapisów</strong>
+            </p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data i czas</th>
+                        <th>Pracownik</th>
+                        <th>Typ zdarzenia</th>
+                        <th>Status</th>
+                        <th>Podobieństwo</th>                        
+                        <th>Zdjęcie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            {% if log.pracownik %}
+                                <strong>{{ log.pracownik.name }}</strong>
+                            {% else %}
+                                <em style="color: #999;">NIEZNANY</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="event-type event-{{ log.event_type.lower().replace('_', '-') }}">
+                                {{ log.event_type.replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.success %}
+                                <span class="status status-success">✓ SUKCES</span>
+                            {% else %}
+                                <span class="status status-error">✗ BŁĄD</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.similarity_score %}
+                                {{ "%.1f%%"|format(log.similarity_score * 100) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            {% if log.capture_filename %}
+                                <a href="{{ url_for('static', filename='security_captures/' + log.capture_filename) }}" target="_blank">
+                                    <img src="{{ url_for('static', filename='security_captures/' + log.capture_filename) }}" 
+                                        style="width: 50px; height: 50px; object-fit: cover; border: 2px solid red; border-radius: 4px;">
+                                    <br><small style="color:red; font-weight:bold;">ZOBACZ</small>
+                                </a>
+                            {% else %}
+                                <span style="color:#ccc">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <h3>Brak danych</h3>
+                <p>Nie znaleziono żadnych logów spełniających kryteria</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
